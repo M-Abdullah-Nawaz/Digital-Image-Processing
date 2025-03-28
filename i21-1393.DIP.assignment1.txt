@@ -1,0 +1,223 @@
+%  M Abdullah Nawaz
+%  i21-1393
+% DIP CS-7A
+
+
+
+
+
+
+
+function image_processing_app()
+    % Create the main figure
+    fig = uifigure('Name', 'Image Processing Application By M Abdullah Nawaz', 'Position', [100, 100, 800, 600]);
+
+    % Heading Label
+    lblHeading = uilabel(fig, 'Text', 'GUI-based Image Manipulation Application', ...
+        'Position', [20, 570, 760, 30], 'FontSize', 16, 'FontWeight', 'bold', 'HorizontalAlignment', 'center');
+
+    % Create UI components of given features 
+    % Browse Button
+
+% TEXT
+       lblHeading = uilabel(fig, 'Text', 'Upload image!', ...
+        'Position', [12, 540, 660, 30], 'FontSize', 15, 'FontWeight', 'bold', 'HorizontalAlignment', 'Left');
+
+      
+    btnBrowse = uibutton(fig, 'push', 'Text', 'Browse', 'Position', [10, 510, 100, 30], ...
+        'ButtonPushedFcn', @browseImage, 'BackgroundColor', [0.1 0.6 0.1]);                % Green color
+
+
+
+    % Save Image Dropdown
+    lblFormat = uilabel(fig, 'Text', 'Save Image As:', 'Position', [20, 470, 100, 30]);
+  formatDropdown = uidropdown(fig, 'Items', {'.jpg', '.png', '.bmp', '.tiff'}, 'Position', [130, 470, 100, 30]);
+
+
+
+% text
+ lblHeading = uilabel(fig, 'Text', 'Get your image information !', ...
+        'Position', [132, 430, 660, 30], 'FontSize', 15, 'FontWeight', 'bold', 'HorizontalAlignment', 'Left');
+    
+    % Image Info Button
+    btnInfo = uibutton(fig, 'push', 'Text', 'Image Info', 'Position', [20, 430, 100, 30], ...
+        'ButtonPushedFcn', @showImageInfo, 'BackgroundColor', [0.678 0.847 0.902]); % Light Blue
+
+
+% text
+ lblHeading = uilabel(fig, 'Text', 'Get your image information !', ...
+        'Position', [132, 430, 660, 30], 'FontSize', 15, 'FontWeight', 'bold', 'HorizontalAlignment', 'Left');
+
+
+    % Process Buttons
+    btnBW = uibutton(fig, 'push', 'Text', 'Convert to Black and white', 'Position', [20, 390, 100, 30], ...
+        'ButtonPushedFcn', @convertToBW, 'BackgroundColor', [0.8 0.8 0.1]); % Yellow color
+    % crop button
+    btnCrop = uibutton(fig, 'push', 'Text', 'Crop Image', 'Position', [130, 390, 100, 30], ...
+        'ButtonPushedFcn', @cropImage, 'BackgroundColor', [0.8 0.1 0.1]); % Red color
+
+    % Resize button
+    btnResize = uibutton(fig, 'push', 'Text', 'Resize Image', 'Position', [240, 390, 100, 30], ...
+        'ButtonPushedFcn', @resizeImage, 'BackgroundColor', [0.1 0.8 0.1]); % Light Green color
+    % Flip Button
+    btnFlip = uibutton(fig, 'push', 'Text', 'Flip Image', 'Position', [350, 390, 100, 30], ...
+        'ButtonPushedFcn', @flipImage, 'BackgroundColor', [0.678 0.847 0.902]); % Light Blue
+    % Combine images
+    btnCombine = uibutton(fig, 'push', 'Text', 'Combine Images', 'Position', [460, 390, 100, 30], ...
+        'ButtonPushedFcn', @combineImages, 'BackgroundColor', [0.8 0.5 0.2]); % Orange color
+
+    % Slider for Threshold
+    lblThreshold = uilabel(fig, 'Text', 'Threshold:', 'Position', [20, 340, 100, 30]);
+    thresholdSlider = uislider(fig, 'Position', [130, 355, 150, 3], 'Limits', [0, 1], 'Value', 0.5, 'ValueChangedFcn', @updateThreshold);
+    
+    % Axes to display images
+    imgAxes = uiaxes(fig, 'Position', [20, 50, 760, 290]);
+    
+ 
+  % Global variables to store the images
+
+    img = [];
+    originalFile = '';
+
+  % Callback functions
+
+    function browseImage(~, ~)
+        [file, path] = uigetfile({'*.jpg;*.png;*.bmp;*.tiff', 'Image Files (*.jpg, *.png, *.bmp, *.tiff)'});
+        if isequal(file, 0)
+            return;
+        end
+        originalFile = fullfile(path, file);
+        img = imread(originalFile);
+        imshow(img, 'Parent', imgAxes);
+    end
+
+
+   % image information
+    function showImageInfo(~, ~)
+        if isempty(img)
+            uialert(fig, 'No image loaded in the application.', 'Error');
+            return;
+        end
+        info = imfinfo(originalFile);
+        fileSize = dir(originalFile).bytes;
+        compressedSize = fileSize;                    % This is a placeholder; for real compressed size, you'd need to save and measure.
+        compressionRatio = fileSize / compressedSize;
+        msg = sprintf('Width: %d px\nHeight: %d px\nFormat: %s\nOriginal Size: %d bytes\nCompressed Size: %d bytes\nCompression Ratio: %.2f', ...
+            info.Width, info.Height, info.Format, fileSize, compressedSize, compressionRatio);
+        uialert(fig, msg, 'Image Info');
+    end
+
+
+% convert image to black and white
+
+    function convertToBW(~, ~)
+        if isempty(img)
+            uialert(fig, 'No image loaded.', 'Error');
+            return;
+        end
+        if size(img, 3) == 3
+            imgGray = rgb2gray(img);
+        else
+            imgGray = img;
+        end
+        threshold = thresholdSlider.Value;
+        imgBW = imbinarize(imgGray, threshold);
+        imshow(imgBW, 'Parent', imgAxes);
+    end
+
+% Crop image
+
+    function cropImage(~, ~)
+        if isempty(img)
+            uialert(fig, 'No image loaded.', 'Error');
+            return;
+        end
+        [croppedImage, ~] = imcrop(img);
+        if ~isempty(croppedImage)
+            img = croppedImage;
+            imshow(img, 'Parent', imgAxes);
+        end
+    end
+
+% Resize the image by providing dimensions
+
+    function resizeImage(~, ~)
+        if isempty(img)
+            uialert(fig, 'No image loaded.', 'Error');
+            return;
+        end
+        prompt = {'Enter new width:', 'Enter new height:'};
+        dlgtitle = 'Resize Image';
+        dims = inputdlg(prompt, dlgtitle, [1 35; 1 35]);
+        if isempty(dims)
+            return;
+        end
+        newWidth = str2double(dims{1});
+        newHeight = str2double(dims{2});
+        if isnan(newWidth) || isnan(newHeight)
+            uialert(fig, 'Invalid dimensions entered.', 'Error');
+            return;
+        end
+        imgResized = imresize(img, [newHeight, newWidth]);
+        img = imgResized;
+        imshow(img, 'Parent', imgAxes);
+    end
+
+
+% Flip image
+
+    function flipImage(~, ~)
+        if isempty(img)
+            uialert(fig, 'No image loaded.', 'Error');
+            return;
+        end
+        choice = uiconfirm(fig, 'Select Flip Direction', 'Flip Image', 'Options', {'Vertical', 'Horizontal'});
+        switch choice
+            case 'Vertical'
+                imgFlipped = flipud(img);
+            case 'Horizontal'
+                imgFlipped = fliplr(img);
+        end
+        img = imgFlipped;
+        imshow(img, 'Parent', imgAxes);
+    end
+
+
+
+% combine 2 images
+
+
+    function combineImages(~, ~)
+        if isempty(img)
+            uialert(fig, 'No image loaded.', 'Error');
+            return;
+        end
+        [file, path] = uigetfile({'*.jpg;*.png;*.bmp;*.tiff', 'Image Files (*.jpg, *.png, *.bmp, *.tiff)'});
+        if isequal(file, 0)
+            return;
+        end
+        img2 = imread(fullfile(path, file));
+        if size(img, 3) ~= size(img2, 3)
+            uialert(fig, 'Images must be of the same type.', 'Error');  % images must be of the same size.
+            return;
+        end
+        choice = uiconfirm(fig, 'Select Combination Method', 'Combine Images', 'Options', {'Side-by-Side', 'Overlay'});
+        switch choice
+            case 'Side-by-Side'
+                imgCombined = [img, img2];
+            case 'Overlay'
+                imgCombined = imfuse(img, img2, 'blend');
+        end
+        imshow(imgCombined, 'Parent', imgAxes);
+    end
+
+  % threshold for conversion
+
+    function updateThreshold(~, ~)
+        if isempty(img)
+            return;
+        end
+        convertToBW();
+    end
+end
+
